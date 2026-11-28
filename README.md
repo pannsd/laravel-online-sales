@@ -56,3 +56,47 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Dokumentasi Endpoint Evaluasi Individu (M12)
+
+### Pembatalan Pesanan oleh Customer (Cancel Order)
+Endpoint ini memungkinkan *customer* membatalkan pesanannya sendiri selama status pesanan masih `pending`, sekaligus mengembalikan stok produk secara otomatis dan mencatat riwayat mutasi stok (`IN`).
+
+- **Method:** `PATCH`
+- **URL:** `/api/v1/orders/{order}/cancel`
+- **Authorization:** `Bearer Token` (Sanctum, khusus role `customer`)
+- **Headers:**
+  - `Accept: application/json`
+  - `Authorization: Bearer <customer_token>`
+- **Request Body:** Tidak ada (*empty body*)
+
+#### Response Sukses (`200 OK`)
+```json
+{
+  "message": "Pesanan berhasil dibatalkan dan stok produk telah dikembalikan.",
+  "data": {
+    "id": 4,
+    "code": "ORD-20261123-LKIHUD",
+    "status": "cancelled",
+    "recipient_name": "Budi Customer",
+    "phone": "081234567890",
+    "address": "Jl. Praktikum No. 10, Purwokerto",
+    "subtotal": 650000,
+    "grand_total": 668000
+  }
+}
+```
+
+#### Response Error
+1. **`403 Forbidden`** — Customer mencoba membatalkan pesanan milik user lain atau diakses oleh role non-customer:
+```json
+{
+  "message": "Anda tidak memiliki akses untuk membatalkan pesanan ini."
+}
+```
+2. **`409 Conflict`** — Status pesanan sudah bukan `pending` (misalnya `confirmed`, `processed`, `shipped`, `completed`, atau `cancelled`):
+```json
+{
+  "message": "Hanya pesanan dengan status pending yang dapat dibatalkan oleh customer."
+}
+```
